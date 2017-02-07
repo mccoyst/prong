@@ -3,6 +3,10 @@
 #include <SDL2/SDL.h>
 
 int move_goals(std::vector<SDL_Rect>*, int);
+void draw_goals(SDL_Renderer *rend, std::vector<SDL_Rect> *goals, float draw_interp, int dy);
+void move_pad(SDL_Rect*, int);
+int move_ball(SDL_Rect*, int, int);
+void draw_ball(SDL_Renderer *rend, SDL_Rect *ball, float draw_interp, int dx, int dy);
 
 int width = 640, height = 480;
 
@@ -37,7 +41,6 @@ int main(int argc, char *argv[]){
 		{width-8-64+24, height-8-64+24, 64-48, 64-48},
 	};
 	auto left_goal_dy = 1, right_goal_dy = -1;
-	auto interp_goals = left_goals;
 	int flash = 0;
 	bool bright = false;
 
@@ -47,7 +50,6 @@ int main(int argc, char *argv[]){
 	int right_dy = 0;
 
 	SDL_Rect ball = {(width-8-64)/2, (height-8-64)/2, 32, 32};
-	auto interp_ball = ball;
 	int ball_dx = -1, ball_dy = 0;
 
 	Uint32 last_time = 0;
@@ -107,20 +109,8 @@ int main(int argc, char *argv[]){
 				ball_dy = -ball_dy;
 			}
 
-			left_pad.y += left_dy;
-			if(left_pad.y < 0){
-				left_pad.y = 0;
-			}
-			if(left_pad.y+left_pad.h > height){
-				left_pad.y = height - left_pad.h;
-			}
-			right_pad.y += right_dy;
-			if(right_pad.y < 0){
-				right_pad.y = 0;
-			}
-			if(right_pad.y+right_pad.h > height){
-				right_pad.y = height - right_pad.h;
-			}
+			move_pad(&left_pad, left_dy);
+			move_pad(&right_pad, right_dy);
 
 			left_goal_dy = move_goals(&left_goals, left_goal_dy);
 			right_goal_dy = move_goals(&right_goals, right_goal_dy);
@@ -158,25 +148,10 @@ int main(int argc, char *argv[]){
 		}
 		SDL_RenderClear(rend);
 
-		SDL_SetRenderDrawColor(rend, 64, 128, 255, 255);
-		interp_ball = ball;
-		if(lag > 0){
-			interp_ball.x += draw_interp*ball_dx;
-			interp_ball.y += draw_interp*ball_dy;
-		}
-		SDL_RenderDrawRect(rend, &interp_ball);
+		draw_ball(rend, &ball, draw_interp, ball_dx, ball_dy);
 
-		SDL_SetRenderDrawColor(rend, 255, 128, 64, 255);
-		interp_goals = left_goals;
-		if(lag > 0){
-			move_goals(&interp_goals, draw_interp*left_goal_dy);
-		}
-		SDL_RenderDrawRects(rend, interp_goals.data(), interp_goals.size());
-		interp_goals = right_goals;
-		if(lag > 0){
-			move_goals(&interp_goals, draw_interp*right_goal_dy);
-		}
-		SDL_RenderDrawRects(rend, interp_goals.data(), interp_goals.size());
+		draw_goals(rend, &left_goals, draw_interp, left_goal_dy);
+		draw_goals(rend, &right_goals, draw_interp, right_goal_dy);
 
 		SDL_SetRenderDrawColor(rend, 128, 255, 64, 255);
 		SDL_RenderDrawRect(rend, &left_pad);
@@ -200,3 +175,33 @@ int move_goals(std::vector<SDL_Rect> *goals, int dy){
 	}
 	return dy;
 }
+
+void draw_goals(SDL_Renderer *rend, std::vector<SDL_Rect> *goals, float draw_interp, int dy) {
+	auto interp_goals = *goals;
+	if(draw_interp != 0){
+		move_goals(goals, draw_interp*dy);
+	}
+	SDL_SetRenderDrawColor(rend, 255, 128, 64, 255);
+	SDL_RenderDrawRects(rend, interp_goals.data(), interp_goals.size());
+}
+
+void move_pad(SDL_Rect *pad, int dy) {
+	pad->y += dy;
+	if(pad->y < 0){
+		pad->y = 0;
+	}
+	if(pad->y+pad->h > height){
+		pad->y = height - pad->h;
+	}
+}
+
+void draw_ball(SDL_Renderer *rend, SDL_Rect *ball, float draw_interp, int dx, int dy) {
+	auto interp_ball = *ball;
+	if(draw_interp != 0){
+		interp_ball.x += draw_interp*dx;
+		interp_ball.y += draw_interp*dy;
+	}
+	SDL_SetRenderDrawColor(rend, 64, 128, 255, 255);
+	SDL_RenderDrawRect(rend, &interp_ball);
+}
+
