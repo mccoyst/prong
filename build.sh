@@ -4,7 +4,7 @@ ldflags_Darwin='-framework SDL2'
 ldflags_Linux='-lSDL2'
 
 progname=$(basename $(pwd))
-objects=$(echo *.cxx | sed 's/\.cxx$/.o/g')
+objects=$(echo *.cxx | sed 's/\.cxx/.o/g')
 
 if [ ! -e build.ninja ]; then
 	case $(uname) in
