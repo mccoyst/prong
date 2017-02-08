@@ -36,4 +36,4 @@ EOF
 	echo "build $progname: ld $objects" >> build.ninja
 fi
 
-exec ninja "$@"
+time ninja "$@"
