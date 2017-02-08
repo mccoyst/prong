@@ -2,11 +2,18 @@
 #include <vector>
 #include <SDL2/SDL.h>
 
+struct Ball {
+	SDL_Rect r;
+	int dx, dy;
+
+	void move();
+	void draw(SDL_Renderer *rend, float draw_interp);
+};
+
 int move_goals(std::vector<SDL_Rect>*, int);
 void draw_goals(SDL_Renderer *rend, std::vector<SDL_Rect> *goals, float draw_interp, int dy);
 void move_pad(SDL_Rect*, int);
 int move_ball(SDL_Rect*, int, int);
-void draw_ball(SDL_Renderer *rend, SDL_Rect *ball, float draw_interp, int dx, int dy);
 
 int width = 640, height = 480;
 
@@ -49,8 +56,10 @@ int main(int argc, char *argv[]){
 	SDL_Rect right_pad = {width-8-64-32, 8, 32, 128 };
 	int right_dy = 0;
 
-	SDL_Rect ball = {(width-8-64)/2, (height-8-64)/2, 32, 32};
-	int ball_dx = -1, ball_dy = 0;
+	Ball ball = {
+		{(width-8-64)/2, (height-8-64)/2, 32, 32},
+		-1, 0,
+	};
 
 	Uint32 last_time = 0;
 	Uint32 frame_ms = 8, lag = 0;
@@ -94,40 +103,27 @@ int main(int argc, char *argv[]){
 		}
 
 		while(lag >= frame_ms){
-			ball.x += ball_dx;
-			ball.y += ball_dy;
-			if(ball.x < -ball.w){
-				ball.x = width;
-			}
-			if(ball.x > width){
-				ball.x = 0;
-			}
-			if(ball.y < 0){
-				ball_dy = -ball_dy;
-			}
-			if(ball.y > height-ball.h){
-				ball_dy = -ball_dy;
-			}
-
 			move_pad(&left_pad, left_dy);
 			move_pad(&right_pad, right_dy);
+
+			ball.move();
 
 			left_goal_dy = move_goals(&left_goals, left_goal_dy);
 			right_goal_dy = move_goals(&right_goals, right_goal_dy);
 
-			if(SDL_HasIntersection(&left_pad, &ball)){
-				ball_dy += left_dy;
-				ball_dx = -ball_dx;
+			if(SDL_HasIntersection(&left_pad, &ball.r)){
+				ball.dy += left_dy;
+				ball.dx = -ball.dx;
 			}
-			if(SDL_HasIntersection(&right_pad, &ball)){
-				ball_dy += right_dy;
-				ball_dx = -ball_dx;
+			if(SDL_HasIntersection(&right_pad, &ball.r)){
+				ball.dy += right_dy;
+				ball.dx = -ball.dx;
 			}
 
-			if(flash == 0 && SDL_HasIntersection(&left_goals[0], &ball)){
+			if(flash == 0 && SDL_HasIntersection(&left_goals[0], &ball.r)){
 				flash = 50;
 			}
-			if(flash == 0 && SDL_HasIntersection(&right_goals[0], &ball)){
+			if(flash == 0 && SDL_HasIntersection(&right_goals[0], &ball.r)){
 				flash = 50;
 			}
 
@@ -148,7 +144,7 @@ int main(int argc, char *argv[]){
 		}
 		SDL_RenderClear(rend);
 
-		draw_ball(rend, &ball, draw_interp, ball_dx, ball_dy);
+		ball.draw(rend, draw_interp);
 
 		draw_goals(rend, &left_goals, draw_interp, left_goal_dy);
 		draw_goals(rend, &right_goals, draw_interp, right_goal_dy);
@@ -195,13 +191,29 @@ void move_pad(SDL_Rect *pad, int dy) {
 	}
 }
 
-void draw_ball(SDL_Renderer *rend, SDL_Rect *ball, float draw_interp, int dx, int dy) {
-	auto interp_ball = *ball;
+void Ball::draw(SDL_Renderer *rend, float draw_interp) {
+	auto interp_ball = this->r;
 	if(draw_interp != 0){
-		interp_ball.x += draw_interp*dx;
-		interp_ball.y += draw_interp*dy;
+		interp_ball.x += draw_interp*this->dx;
+		interp_ball.y += draw_interp*this->dy;
 	}
 	SDL_SetRenderDrawColor(rend, 64, 128, 255, 255);
 	SDL_RenderDrawRect(rend, &interp_ball);
 }
 
+void Ball::move() {
+	this->r.x += this->dx;
+	this->r.y += this->dy;
+	if(this->r.x < -this->r.w){
+		this->r.x = width;
+	}
+	if(this->r.x > width){
+		this->r.x = 0;
+	}
+	if(this->r.y < 0){
+		this->dy = -this->dy;
+	}
+	if(this->r.y > height-this->r.h){
+		this->dy = -this->dy;
+	}
+}
