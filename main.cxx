@@ -15,6 +15,14 @@ void draw_goals(SDL_Renderer *rend, std::vector<SDL_Rect> *goals, float draw_int
 void move_pad(SDL_Rect*, int);
 int move_ball(SDL_Rect*, int, int);
 
+inline bool keydown(SDL_Event *e, SDL_Keycode s) {
+	return e->type == SDL_KEYDOWN && e->key.keysym.sym == s;
+}
+
+inline bool keyup(SDL_Event *e, SDL_Keycode s) {
+	return e->type == SDL_KEYUP && e->key.keysym.sym == s;
+}
+
 int width = 640, height = 480;
 
 int main(int argc, char *argv[]){
@@ -76,28 +84,28 @@ int main(int argc, char *argv[]){
 			if(e.type == SDL_QUIT){
 				exit(0);
 			}
-			if(e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_e && left_dy == 0){
+			if(keydown(&e, SDLK_e) && left_dy == 0){
 				left_dy = -2;
 			}
-			if(e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_d && left_dy == 0){
+			if(keydown(&e, SDLK_d) && left_dy == 0){
 				left_dy = 2;
 			}
-			if(e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_e && left_dy == -2){
+			if(keyup(&e, SDLK_e) && left_dy == -2){
 				left_dy = 0;
 			}
-			if(e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_d && left_dy == 2){
+			if(keyup(&e, SDLK_d) && left_dy == 2){
 				left_dy = 0;
 			}
-			if(e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_UP && right_dy == 0){
+			if(keydown(&e, SDLK_UP) && right_dy == 0){
 				right_dy = -2;
 			}
-			if(e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_DOWN && right_dy == 0){
+			if(keydown(&e, SDLK_DOWN) && right_dy == 0){
 				right_dy = 2;
 			}
-			if(e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_UP && right_dy == -2){
+			if(keyup(&e, SDLK_UP) && right_dy == -2){
 				right_dy = 0;
 			}
-			if(e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_DOWN && right_dy == 2){
+			if(keyup(&e, SDLK_DOWN) && right_dy == 2){
 				right_dy = 0;
 			}
 		}
