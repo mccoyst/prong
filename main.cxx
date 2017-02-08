@@ -12,8 +12,15 @@ struct Ball {
 
 int move_goals(std::vector<SDL_Rect>*, int);
 void draw_goals(SDL_Renderer *rend, std::vector<SDL_Rect> *goals, float draw_interp, int dy);
-void move_pad(SDL_Rect*, int);
-int move_ball(SDL_Rect*, int, int);
+
+struct Pad {
+	SDL_Rect r;
+	int dy;
+	SDL_Keycode up, down;
+
+	void control(SDL_Event*);
+	void move();
+};
 
 inline bool keydown(SDL_Event *e, SDL_Keycode s) {
 	return e->type == SDL_KEYDOWN && e->key.keysym.sym == s;
@@ -59,10 +66,16 @@ int main(int argc, char *argv[]){
 	int flash = 0;
 	bool bright = false;
 
-	SDL_Rect left_pad = {8+64+8, 8, 32, 128 };
-	int left_dy = 0;
-	SDL_Rect right_pad = {width-8-64-32-8, 8, 32, 128 };
-	int right_dy = 0;
+	Pad left_pad = {
+		{8+64+8, 8, 32, 128},
+		0,
+		SDLK_e, SDLK_d,
+	};
+	Pad right_pad = {
+		{width-8-64-32-8, 8, 32, 128},
+		0,
+		SDLK_UP, SDLK_DOWN,
+	};
 
 	Ball ball = {
 		{(width-8-64)/2, (height-8-64)/2, 32, 32},
@@ -85,47 +98,25 @@ int main(int argc, char *argv[]){
 			if(e.type == SDL_QUIT){
 				exit(0);
 			}
-			if(keydown(&e, SDLK_e) && left_dy == 0){
-				left_dy = -2;
-			}
-			if(keydown(&e, SDLK_d) && left_dy == 0){
-				left_dy = 2;
-			}
-			if(keyup(&e, SDLK_e) && left_dy == -2){
-				left_dy = 0;
-			}
-			if(keyup(&e, SDLK_d) && left_dy == 2){
-				left_dy = 0;
-			}
-			if(keydown(&e, SDLK_UP) && right_dy == 0){
-				right_dy = -2;
-			}
-			if(keydown(&e, SDLK_DOWN) && right_dy == 0){
-				right_dy = 2;
-			}
-			if(keyup(&e, SDLK_UP) && right_dy == -2){
-				right_dy = 0;
-			}
-			if(keyup(&e, SDLK_DOWN) && right_dy == 2){
-				right_dy = 0;
-			}
+			left_pad.control(&e);
+			right_pad.control(&e);
 		}
 
 		while(lag >= frame_ms){
-			move_pad(&left_pad, left_dy);
-			move_pad(&right_pad, right_dy);
+			left_pad.move();
+			right_pad.move();
 
 			ball.move();
 
 			left_goal_dy = move_goals(&left_goals, left_goal_dy);
 			right_goal_dy = move_goals(&right_goals, right_goal_dy);
 
-			if(SDL_HasIntersection(&left_pad, &ball.r)){
-				ball.dy += left_dy;
+			if(SDL_HasIntersection(&left_pad.r, &ball.r)){
+				ball.dy += left_pad.dy;
 				ball.dx = -ball.dx;
 			}
-			if(SDL_HasIntersection(&right_pad, &ball.r)){
-				ball.dy += right_dy;
+			if(SDL_HasIntersection(&right_pad.r, &ball.r)){
+				ball.dy += right_pad.dy;
 				ball.dx = -ball.dx;
 			}
 
@@ -161,8 +152,8 @@ int main(int argc, char *argv[]){
 		draw_goals(rend, &right_goals, draw_interp, right_goal_dy);
 
 		SDL_SetRenderDrawColor(rend, 128, 255, 64, 255);
-		SDL_RenderDrawRect(rend, &left_pad);
-		SDL_RenderDrawRect(rend, &right_pad);
+		SDL_RenderDrawRect(rend, &left_pad.r);
+		SDL_RenderDrawRect(rend, &right_pad.r);
 
 		SDL_RenderPresent(rend);
 	}
@@ -192,13 +183,28 @@ void draw_goals(SDL_Renderer *rend, std::vector<SDL_Rect> *goals, float draw_int
 	SDL_RenderDrawRects(rend, interp_goals.data(), interp_goals.size());
 }
 
-void move_pad(SDL_Rect *pad, int dy) {
-	pad->y += dy;
-	if(pad->y < 0){
-		pad->y = 0;
+void Pad::control(SDL_Event *e) {
+	if(keydown(e, this->up) && this->dy == 0){
+		this->dy = -2;
 	}
-	if(pad->y+pad->h > height){
-		pad->y = height - pad->h;
+	if(keydown(e, this->down) && this->dy == 0){
+		this->dy = 2;
+	}
+	if(keyup(e, this->up) && this->dy == -2){
+		this->dy = 0;
+	}
+	if(keyup(e, this->down) && this->dy == 2){
+		this->dy = 0;
+	}
+}
+
+void Pad::move() {
+	this->r.y += dy;
+	if(this->r.y < 0){
+		this->r.y = 0;
+	}
+	if(this->r.y+this->r.h > height){
+		this->r.y = height - this->r.h;
 	}
 }
 
