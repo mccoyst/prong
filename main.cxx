@@ -68,6 +68,7 @@ int main(int argc, char *argv[]){
 		{(width-8-64)/2, (height-8-64)/2, 32, 32},
 		-1, 0,
 	};
+	auto original_ball = ball;
 
 	Uint32 last_time = 0;
 	Uint32 frame_ms = 8, lag = 0;
@@ -130,9 +131,11 @@ int main(int argc, char *argv[]){
 
 			if(flash == 0 && SDL_HasIntersection(&left_goals[0], &ball.r)){
 				flash = 50;
+				ball = original_ball;
 			}
 			if(flash == 0 && SDL_HasIntersection(&right_goals[0], &ball.r)){
 				flash = 50;
+				ball = original_ball;
 			}
 
 			lag -= frame_ms;
