@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
 
 	SDL_Rect left_pad = {8+64+8, 8, 32, 128 };
 	int left_dy = 0;
-	SDL_Rect right_pad = {width-8-64-32, 8, 32, 128 };
+	SDL_Rect right_pad = {width-8-64-32-8, 8, 32, 128 };
 	int right_dy = 0;
 
 	Ball ball = {
