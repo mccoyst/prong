@@ -152,8 +152,8 @@ int main(int argc, char *argv[]){
 		draw_goals(rend, &right_goals, draw_interp, right_goal_dy);
 
 		SDL_SetRenderDrawColor(rend, 128, 255, 64, 255);
-		SDL_RenderDrawRect(rend, &left_pad.r);
-		SDL_RenderDrawRect(rend, &right_pad.r);
+		SDL_RenderFillRect(rend, &left_pad.r);
+		SDL_RenderFillRect(rend, &right_pad.r);
 
 		SDL_RenderPresent(rend);
 	}
@@ -163,10 +163,10 @@ int main(int argc, char *argv[]){
 
 int move_goals(std::vector<SDL_Rect> *goals, int dy){
 	for(auto& r : *goals){
-		if(r.y < 0){
+		if(dy < 0 && r.y < 0){
 			dy = 1;
 		}
-		if(r.y + r.h > height){
+		if(dy > 0 && r.y + r.h > height){
 			dy = -1;
 		}
 		r.y += dy;
@@ -215,7 +215,7 @@ void Ball::draw(SDL_Renderer *rend, float draw_interp) {
 		interp_ball.y += draw_interp*this->dy;
 	}
 	SDL_SetRenderDrawColor(rend, 64, 128, 255, 255);
-	SDL_RenderDrawRect(rend, &interp_ball);
+	SDL_RenderFillRect(rend, &interp_ball);
 }
 
 void Ball::move() {
